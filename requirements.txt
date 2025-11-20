@@ -1,0 +1,15 @@
+python -m venv venv
+
+cd venv
+
+cd Scripts
+
+.\Activate.ps1
+
+cd ..
+
+pip install supabase
+
+pip install streamlit
+
+pip install python-dotenv
