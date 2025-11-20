@@ -14,7 +14,7 @@ supabase: Client = create_client(url,key)
 #this enable supabase methods to be used with this variable supabase
 
 def get_todos():
-    response= supabase.table('todos').select('*').execute()
+    response= supabase.table('todos').select('*').order('id', desc=False).execute()
     return response.data
 
 def add_todo(task):
@@ -42,16 +42,45 @@ if clickedAdd: #checks if button was clicked
 st.write("### To-Do List:")
 todos= get_todos()
 
+
+
+
 if todos!=False: #if the todo list is empty, todos will return false hence this will check that
+    
     for i,item in enumerate (todos, start=1): #todos contains many dictionaries, item loops thru each dictionary and 'task' is the key for each dictionary so in the end you get the value of the 'task' key in each dictionary in the todos table 
-        col1,col2= st.columns([1,1])
+
+        edit_key = f"editing-{item['id']}"
+        input_key = f"input-{item['id']}"
+
+        if edit_key not in st.session_state:
+            st.session_state[edit_key] = False
+        if input_key not in st.session_state:
+            st.session_state[input_key] = item['task']
+
+
+        col1,col2,col3= st.columns([0.6,0.2,0.2])
 
         with col1:
             st.markdown(f"{i}. {item['task']}")
+
         with col2:
+            if st.button("Edit Task", key=f"edit-{item['id']}"):
+                st.session_state[edit_key]= True
+                
+            if st.session_state[edit_key]:
+                
+                 edited_task=st.text_input("Update Task:", value= st.session_state[input_key], key=input_key)
+                
+                 if st.button("Save", key=f"save-{item['id']}"):
+                    supabase.table('todos').update({'task':edited_task}).eq("id",item['id']).execute()
+                    st.session_state[edit_key]= False
+                    st.rerun()
+
+        with col3:
             if st.button("Delete Task", key=f"del-{item['id']}"): #here f string is used to make sure integer causes no error, and del word is just to understand like for example the button to delete task 1 has the key = del-1
                 del_todo(item['id'])
                 st.rerun()
 
 else:
     st.write("No tasks available.")
+
