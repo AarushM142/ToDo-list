@@ -16,9 +16,24 @@ supabase: Client = create_client(url, key)
 def sign_up(email, password):
     try:
         user = supabase.auth.sign_up({"email": email, "password": password})
+
+        # If email already exists, Supabase returns an object with no user.id
+        if not user or not user.user:
+            st.error("This email is already registered. Please log in instead.")
+            return None
+
         return user
+
     except Exception as e:
-        st.error(f"Registration failed: {e}")
+        message = str(e).lower()
+
+        # Explicit message check (Supabase error pattern)
+        if "duplicate key value" in message or "already registered" in message:
+            st.error("This email is already registered. Please log in instead.")
+        else:
+            st.error(f"Registration failed: {e}")
+
+        return None
 
 def sign_in(email, password):
     try:
